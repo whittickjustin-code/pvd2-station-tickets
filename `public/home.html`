@@ -1,0 +1,28 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVD2 Station Ticket System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        h1 { color: #00d4ff; font-size: 24px; margin-bottom: 8px; }
+        .subtitle { color: #8899aa; margin-bottom: 40px; }
+        .links { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 340px; }
+        a { display: block; padding: 20px; background: #16213e; border: 1px solid #2a3f5f; border-radius: 12px; color: #eee; text-decoration: none; font-size: 18px; text-align: center; font-weight: 600; transition: all 0.2s; }
+        a:hover { border-color: #00d4ff; background: #1e3a5f; }
+        .desc { font-size: 13px; color: #8899aa; margin-top: 4px; font-weight: 400; }
+    </style>
+</head>
+<body>
+    <h1>📋 PVD2 Pack-Lev/Autofold</h1>
+    <p class="subtitle">Station Ticket System</p>
+    <div class="links">
+        <a href="/station?id=5-03">📱 Station Menu (Demo: 5-03)<div class="desc">What associates see on their tablet</div></a>
+        <a href="/dashboard">📋 Manager Dashboard<div class="desc">PA/Manager ticket view</div></a>
+    </div>
+</body>
+</html>
+```
