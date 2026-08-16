@@ -1,4 +1,3 @@
-```json
 {
   "name": "pvd2-station-tickets",
   "version": "1.0.0",
@@ -11,4 +10,3 @@
     "express": "^4.18.2"
   }
 }
-```
