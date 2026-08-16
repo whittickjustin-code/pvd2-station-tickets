@@ -1,0 +1,220 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PVD2 Station Menu</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; overflow-x: hidden; }
+        .station-header { background: linear-gradient(135deg, #0f3460, #16213e); padding: 20px; text-align: center; border-bottom: 2px solid #00d4ff; position: relative; }
+        .station-header h1 { font-size: 18px; color: #00d4ff; }
+        .station-header .station-id { font-size: 30px; font-weight: 700; margin-top: 5px; }
+        .station-header .subtitle { color: #8899aa; font-size: 13px; margin-top: 4px; }
+        .lang-toggle { position: absolute; top: 14px; right: 14px; display: flex; background: #0f1a2e; border-radius: 20px; overflow: hidden; border: 1px solid #2a3f5f; }
+        .lang-btn { padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #8899aa; transition: all 0.2s; }
+        .lang-btn.active { background: #00d4ff; color: #000; }
+        .menu-screen { padding: 16px; display: none; }
+        .menu-screen.active { display: block; }
+        .menu-title { font-size: 16px; color: #8899aa; margin-bottom: 12px; text-align: center; }
+        .menu-btn { display: flex; align-items: center; width: 100%; padding: 20px 16px; margin-bottom: 10px; background: #16213e; border: 1px solid #2a3f5f; border-radius: 12px; cursor: pointer; transition: all 0.15s; font-size: 18px; color: #eee; text-align: left; }
+        .menu-btn:hover { background: #1e3a5f; border-color: #00d4ff; }
+        .menu-btn:active { transform: scale(0.97); background: #0f3460; }
+        .menu-btn .emoji { font-size: 28px; margin-right: 14px; min-width: 40px; text-align: center; }
+        .menu-btn .label { font-weight: 500; }
+        .back-btn { display: inline-flex; align-items: center; padding: 12px 18px; margin-bottom: 14px; background: #2a3f5f; border: none; border-radius: 8px; color: #8899aa; cursor: pointer; font-size: 15px; }
+        .back-btn:active { background: #3a5070; color: #fff; }
+        .confirm-box { background: #16213e; border: 2px solid #00d4ff; border-radius: 14px; padding: 28px; text-align: center; margin-top: 20px; }
+        .confirm-box h3 { color: #00d4ff; margin-bottom: 8px; font-size: 18px; }
+        .confirm-box .issue-summary { font-size: 22px; margin: 16px 0; color: #fff; }
+        .confirm-box .station-label { color: #8899aa; margin-bottom: 20px; font-size: 14px; }
+        .submit-btn { padding: 18px 40px; background: linear-gradient(135deg, #e94560, #c23152); border: none; border-radius: 12px; color: #fff; font-size: 20px; font-weight: 700; cursor: pointer; width: 100%; }
+        .submit-btn:active { transform: scale(0.96); }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .success-screen { text-align: center; padding: 50px 20px; }
+        .success-screen .checkmark { font-size: 70px; margin-bottom: 16px; }
+        .success-screen h2 { color: #4ecdc4; margin-bottom: 8px; font-size: 24px; }
+        .success-screen p { color: #8899aa; margin-bottom: 30px; font-size: 16px; line-height: 1.5; }
+        .success-screen .back-home { padding: 16px 30px; background: #16213e; border: 1px solid #2a3f5f; border-radius: 12px; color: #eee; font-size: 16px; cursor: pointer; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="station-header">
+    <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
+    </div>
+    <h1>PVD2 • Pack-Lev/Autofold</h1>
+    <div class="station-id" id="station-label">Station 5-03</div>
+    <div class="subtitle" id="header-subtitle">Tap your issue below — help is on the way</div>
+</div>
+
+<!-- Main Menu -->
+<div id="screen-main" class="menu-screen active">
+    <div class="menu-title" data-en="What's the problem?" data-es="¿Cuál es el problema?">What's the problem?</div>
+    <div class="menu-btn" onclick="showSub('paper')"><span class="emoji">🧻</span><span class="label" data-en="Paper Roll Issue" data-es="Problema con Rollo de Papel">Paper Roll Issue</span></div>
+    <div class="menu-btn" onclick="showSub('slam')"><span class="emoji">🏷️</span><span class="label" data-en="SLAM Label Roll" data-es="Rollo de Etiquetas SLAM">SLAM Label Roll</span></div>
+    <div class="menu-btn" onclick="showSub('pslip')"><span class="emoji">🖨️</span><span class="label" data-en="P-Slip Printer Label Roll" data-es="Rollo de Etiquetas P-Slip">P-Slip Printer Label Roll</span></div>
+    <div class="menu-btn" onclick="showSub('machine')"><span class="emoji">⚙️</span><span class="label" data-en="Machine Fault" data-es="Falla de Máquina">Machine Fault</span></div>
+    <div class="menu-btn" onclick="showSub('supplies')"><span class="emoji">📦</span><span class="label" data-en="Need Supplies Help" data-es="Necesito Ayuda con Suministros">Need Supplies Help</span></div>
+    <div class="menu-btn" onclick="confirmDirect('Conveyor Belt Jam', 'Atasco de Banda Transportadora')"><span class="emoji">🔄</span><span class="label" data-en="Conveyor Belt Jam" data-es="Atasco de Banda Transportadora">Conveyor Belt Jam</span></div>
+</div>
+
+<!-- Paper Roll Sub -->
+<div id="screen-paper" class="menu-screen">
+    <button class="back-btn" onclick="goBack()">← <span data-en="Back" data-es="Atrás">Back</span></button>
+    <div class="menu-title" data-en="🧻 Paper Roll — What's wrong?" data-es="🧻 Rollo de Papel — ¿Qué pasa?">🧻 Paper Roll — What's wrong?</div>
+    <div class="menu-btn" onclick="confirmIssue('🧻 Paper Roll → Jammed','🧻 Rollo de Papel → Atascado')"><span class="emoji">⛔</span><span class="label" data-en="Jammed" data-es="Atascado">Jammed</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🧻 Paper Roll → Misaligned','🧻 Rollo de Papel → Desalineado')"><span class="emoji">↔️</span><span class="label" data-en="Misaligned" data-es="Desalineado">Misaligned</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🧻 Paper Roll → Needs RME to replace','🧻 Rollo de Papel → Necesita RME')"><span class="emoji">🔧</span><span class="label" data-en="Needs RME to replace" data-es="Necesita RME para reemplazar">Needs RME to replace</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🧻 Paper Roll → Paper tearing','🧻 Rollo de Papel → Papel rasgándose')"><span class="emoji">📃</span><span class="label" data-en="Paper tearing" data-es="Papel rasgándose">Paper tearing</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🧻 Paper Roll → Something else','🧻 Rollo de Papel → Otro problema')"><span class="emoji">❓</span><span class="label" data-en="Something else" data-es="Otro problema">Something else</span></div>
+</div>
+
+<!-- SLAM Label Sub -->
+<div id="screen-slam" class="menu-screen">
+    <button class="back-btn" onclick="goBack()">← <span data-en="Back" data-es="Atrás">Back</span></button>
+    <div class="menu-title" data-en="🏷️ SLAM Label — What's wrong?" data-es="🏷️ Etiqueta SLAM — ¿Qué pasa?">🏷️ SLAM Label — What's wrong?</div>
+    <div class="menu-btn" onclick="confirmIssue('🏷️ SLAM Label → Label roll stuck','🏷️ Etiqueta SLAM → Rollo atascado')"><span class="emoji">⛔</span><span class="label" data-en="Label roll stuck" data-es="Rollo atascado">Label roll stuck</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🏷️ SLAM Label → Misfeed','🏷️ Etiqueta SLAM → Alimentación incorrecta')"><span class="emoji">↩️</span><span class="label" data-en="Misfeed" data-es="Alimentación incorrecta">Misfeed</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🏷️ SLAM Label → Misprint','🏷️ Etiqueta SLAM → Impresión incorrecta')"><span class="emoji">🖨️</span><span class="label" data-en="Misprint" data-es="Impresión incorrecta">Misprint</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🏷️ SLAM Label → Needs RME to replace','🏷️ Etiqueta SLAM → Necesita RME')"><span class="emoji">🔧</span><span class="label" data-en="Needs RME to replace" data-es="Necesita RME para reemplazar">Needs RME to replace</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🏷️ SLAM Label → Something else','🏷️ Etiqueta SLAM → Otro problema')"><span class="emoji">❓</span><span class="label" data-en="Something else" data-es="Otro problema">Something else</span></div>
+</div>
+
+<!-- P-Slip Sub -->
+<div id="screen-pslip" class="menu-screen">
+    <button class="back-btn" onclick="goBack()">← <span data-en="Back" data-es="Atrás">Back</span></button>
+    <div class="menu-title" data-en="🖨️ P-Slip Printer — What's wrong?" data-es="🖨️ Impresora P-Slip — ¿Qué pasa?">🖨️ P-Slip Printer — What's wrong?</div>
+    <div class="menu-btn" onclick="confirmIssue('🖨️ P-Slip → Label jam','🖨️ P-Slip → Atasco de etiqueta')"><span class="emoji">⛔</span><span class="label" data-en="Label jam" data-es="Atasco de etiqueta">Label jam</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🖨️ P-Slip → Roll empty','🖨️ P-Slip → Rollo vacío')"><span class="emoji">📭</span><span class="label" data-en="Roll empty" data-es="Rollo vacío">Roll empty</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🖨️ P-Slip → Not printing','🖨️ P-Slip → No imprime')"><span class="emoji">🚫</span><span class="label" data-en="Not printing" data-es="No imprime">Not printing</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🖨️ P-Slip → Printing wrong info','🖨️ P-Slip → Info incorrecta')"><span class="emoji">⚠️</span><span class="label" data-en="Printing wrong info" data-es="Imprime información incorrecta">Printing wrong info</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🖨️ P-Slip → Needs RME to fix','🖨️ P-Slip → Necesita RME')"><span class="emoji">🔧</span><span class="label" data-en="Needs RME to fix" data-es="Necesita RME para reparar">Needs RME to fix</span></div>
+    <div class="menu-btn" onclick="confirmIssue('🖨️ P-Slip → Something else','🖨️ P-Slip → Otro problema')"><span class="emoji">❓</span><span class="label" data-en="Something else" data-es="Otro problema">Something else</span></div>
+</div>
+
+<!-- Machine Fault Sub -->
+<div id="screen-machine" class="menu-screen">
+    <button class="back-btn" onclick="goBack()">← <span data-en="Back" data-es="Atrás">Back</span></button>
+    <div class="menu-title" data-en="⚙️ Machine Fault — What's wrong?" data-es="⚙️ Falla de Máquina — ¿Qué pasa?">⚙️ Machine Fault — What's wrong?</div>
+    <div class="menu-btn" onclick="confirmIssue('⚙️ Machine Fault → Error on screen','⚙️ Falla → Error en pantalla')"><span class="emoji">🖥️</span><span class="label" data-en="Error on screen" data-es="Error en pantalla">Error on screen</span></div>
+    <div class="menu-btn" onclick="confirmIssue('⚙️ Machine Fault → Machine stopped','⚙️ Falla → Máquina detenida')"><span class="emoji">🛑</span><span class="label" data-en="Machine stopped" data-es="Máquina detenida">Machine stopped</span></div>
+    <div class="menu-btn" onclick="confirmIssue('⚙️ Machine Fault → Unusual noise','⚙️ Falla → Ruido inusual')"><span class="emoji">🔊</span><span class="label" data-en="Unusual noise" data-es="Ruido inusual">Unusual noise</span></div>
+    <div class="menu-btn" onclick="confirmIssue('⚙️ Machine Fault → Conveyor-belt issue','⚙️ Falla → Problema con banda')"><span class="emoji">🔄</span><span class="label" data-en="Conveyor-belt issue" data-es="Problema con banda">Conveyor-belt issue</span></div>
+    <div class="menu-btn" onclick="confirmIssue('⚙️ Machine Fault → Packages damaged','⚙️ Falla → Paquetes dañados')"><span class="emoji">💥</span><span class="label" data-en="Packages damaged" data-es="Paquetes dañados">Packages damaged</span></div>
+    <div class="menu-btn" onclick="confirmIssue('⚙️ Machine Fault → Safety concern','⚙️ Falla → Problema de seguridad')"><span class="emoji">🚨</span><span class="label" data-en="Safety concern" data-es="Problema de seguridad">Safety concern</span></div>
+    <div class="menu-btn" onclick="confirmIssue('⚙️ Machine Fault → Something else','⚙️ Falla → Otro problema')"><span class="emoji">❓</span><span class="label" data-en="Something else" data-es="Otro problema">Something else</span></div>
+</div>
+
+<!-- Supplies Sub -->
+<div id="screen-supplies" class="menu-screen">
+    <button class="back-btn" onclick="goBack()">← <span data-en="Back" data-es="Atrás">Back</span></button>
+    <div class="menu-title" data-en="📦 Supplies — What do you need?" data-es="📦 Suministros — ¿Qué necesitas?">📦 Supplies — What do you need?</div>
+    <div class="menu-btn" onclick="confirmIssue('📦 Supplies → Don\'t know how to load','📦 Suministros → No sé cómo cargar')"><span class="emoji">🤷</span><span class="label" data-en="Don't know how to load paper/labels" data-es="No sé cómo cargar papel/etiquetas">Don't know how to load paper/labels</span></div>
+    <div class="menu-btn" onclick="confirmIssue('📦 Supplies → Running low','📦 Suministros → Suministros bajos')"><span class="emoji">📉</span><span class="label" data-en="Supplies running low" data-es="Suministros bajos">Supplies running low</span></div>
+    <div class="menu-btn" onclick="confirmIssue('📦 Supplies → Tape needs refilling','📦 Suministros → Cinta necesita recarga')"><span class="emoji">🧲</span><span class="label" data-en="Tape needs refilling" data-es="Cinta necesita recarga">Tape needs refilling</span></div>
+    <div class="menu-btn" onclick="confirmIssue('📦 Supplies → Something else','📦 Suministros → Otro problema')"><span class="emoji">❓</span><span class="label" data-en="Something else" data-es="Otro problema">Something else</span></div>
+</div>
+
+<!-- Confirm Screen -->
+<div id="screen-confirm" class="menu-screen">
+    <button class="back-btn" onclick="goBack()">← <span data-en="Back" data-es="Atrás">Back</span></button>
+    <div class="confirm-box">
+        <h3 id="confirm-title" data-en="Confirm Your Issue" data-es="Confirma Tu Problema">Confirm Your Issue</h3>
+        <div class="issue-summary" id="confirm-issue-text"></div>
+        <div class="station-label" id="confirm-station"></div>
+        <button class="submit-btn" id="submit-btn" onclick="submitTicket()">
+            <span data-en="🚨 Submit Ticket" data-es="🚨 Enviar Ticket">🚨 Submit Ticket</span>
+        </button>
+    </div>
+</div>
+
+<!-- Success Screen -->
+<div id="screen-success" class="menu-screen">
+    <div class="success-screen">
+        <div class="checkmark">✅</div>
+        <h2 data-en="Ticket Submitted!" data-es="¡Ticket Enviado!">Ticket Submitted!</h2>
+        <p data-en="Your manager has been notified.<br>Help is on the way." data-es="Tu manager ha sido notificado.<br>La ayuda está en camino.">Your manager has been notified.<br>Help is on the way.</p>
+        <div class="back-home" onclick="goHome()"><span data-en="Back to Menu" data-es="Volver al Menú">Back to Menu</span></div>
+    </div>
+</div>
+
+<script>
+// === CONFIG ===
+var params = new URLSearchParams(window.location.search);
+var stationId = params.get('id') || '5-03';
+document.getElementById('station-label').textContent = 'Station ' + stationId;
+document.getElementById('confirm-station').textContent = 'Station ' + stationId;
+
+// === LANGUAGE ===
+var currentLang = 'en';
+
+function setLang(lang) {
+    currentLang = lang;
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('btn-es').classList.toggle('active', lang === 'es');
+    document.querySelectorAll('[data-' + lang + ']').forEach(function(el) {
+        var text = el.getAttribute('data-' + lang);
+        if (text) el.innerHTML = text;
+    });
+    document.getElementById('header-subtitle').textContent =
+        lang === 'en' ? 'Tap your issue below — help is on the way' : 'Toca tu problema abajo — la ayuda está en camino';
+}
+
+// === NAVIGATION ===
+var pendingIssueEn = '';
+var pendingIssueEs = '';
+
+function showScreen(name) {
+    document.querySelectorAll('.menu-screen').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('screen-' + name).classList.add('active');
+}
+
+function showSub(cat) { showScreen(cat); }
+function goBack() { showScreen('main'); }
+function goHome() { showScreen('main'); }
+
+function confirmIssue(issueEn, issueEs) {
+    pendingIssueEn = issueEn;
+    pendingIssueEs = issueEs;
+    document.getElementById('confirm-issue-text').textContent = currentLang === 'es' ? issueEs : issueEn;
+    showScreen('confirm');
+}
+
+function confirmDirect(issueEn, issueEs) {
+    confirmIssue('🔄 ' + issueEn, '🔄 ' + issueEs);
+}
+
+// === SUBMIT ===
+function submitTicket() {
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Sending...';
+
+    fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            station: 'Station ' + stationId,
+            issue: pendingIssueEn
+        })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.innerHTML = '<span data-en="🚨 Submit Ticket" data-es="🚨 Enviar Ticket">🚨 Submit Ticket</span>';
+        showScreen('success');
+    })
+    .catch(function(err) {
+        btn.disabled = false;
+        btn.innerHTML = '<span data-en="🚨 Submit Ticket" data-es="🚨 Enviar Ticket">🚨 Submit Ticket</span>';
+        showScreen('success');
+    });
+}
+</script>
+</body>
+</html>
+```
