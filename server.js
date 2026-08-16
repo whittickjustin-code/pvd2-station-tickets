@@ -88,6 +88,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`PVD2 Station Ticket System running on port ${PORT}`);
-});
+console.log('PVD2 Station Ticket System running on port ' + PORT);});
 ```
