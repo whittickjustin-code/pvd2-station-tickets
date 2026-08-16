@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -286,4 +285,4 @@ setInterval(loadTickets, 3000);
 </script>
 </body>
 </html>
-```
+
