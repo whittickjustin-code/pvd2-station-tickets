@@ -1,0 +1,289 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVD2 Dashboard — Pack-Lev/Autofold</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .dash-header { background: linear-gradient(135deg, #0f3460, #16213e); padding: 16px 20px; border-bottom: 2px solid #00d4ff; display: flex; justify-content: space-between; align-items: center; }
+        .dash-header h1 { font-size: 18px; color: #00d4ff; }
+        .dash-header .live-badge { font-size: 12px; background: #e94560; padding: 4px 10px; border-radius: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .dash-tabs { display: flex; background: #16213e; padding: 8px; gap: 4px; position: sticky; top: 0; z-index: 50; }
+        .dash-tab { flex: 1; min-width: 0; padding: 12px 6px; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; color: #8899aa; transition: all 0.2s; white-space: nowrap; }
+        .dash-tab.active { background: #1a1a2e; color: #fff; }
+        .dash-tab .count { display: inline-block; background: #2a3f5f; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 4px; }
+        .dash-tab.active .count { background: #00d4ff; color: #000; }
+        .dash-tab.tab-new.active { color: #ffd93d; }
+        .dash-tab.tab-new.active .count { background: #ffd93d; color: #000; }
+        .dash-tab.tab-reviewing.active { color: #4ecdc4; }
+        .dash-tab.tab-reviewing.active .count { background: #4ecdc4; color: #000; }
+        .dash-tab.tab-escalated.active { color: #e94560; }
+        .dash-tab.tab-escalated.active .count { background: #e94560; color: #000; }
+        .dash-tab.tab-closed.active { color: #8899aa; }
+        .dash-content { padding: 12px; }
+        .ticket-card { background: #16213e; border: 1px solid #2a3f5f; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+        .ticket-card.flagged { border-left: 4px solid #ffd93d; }
+        .ticket-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .ticket-station { font-size: 16px; font-weight: 700; color: #00d4ff; }
+        .ticket-time { font-size: 12px; color: #8899aa; }
+        .ticket-time.timer-warn { color: #ffd93d; }
+        .ticket-time.timer-danger { color: #e94560; }
+        .ticket-time.timer-critical { color: #ff0040; font-weight: 700; animation: pulse 1s infinite; }
+        .ticket-issue { font-size: 15px; color: #ccc; margin-bottom: 8px; }
+        .ticket-meta { font-size: 12px; color: #667788; margin-top: 4px; }
+        .claimed-by { font-size: 13px; color: #4ecdc4; margin-bottom: 6px; }
+        .escalate-label { font-size: 13px; color: #e94560; margin-bottom: 6px; }
+        .flag-badge { display: inline-block; background: #ffd93d; color: #000; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; }
+        .resolution-notes { font-size: 12px; color: #aab; background: #0f1a2e; padding: 8px 10px; border-radius: 6px; margin-top: 8px; }
+        .ticket-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .ticket-actions button { padding: 11px 18px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+        .ticket-actions button:active { transform: scale(0.95); }
+        .btn-claim { background: #4ecdc4; color: #000; }
+        .btn-escalate { background: #e94560; color: #fff; }
+        .btn-resolve { background: #27ae60; color: #fff; }
+        .btn-needswork { background: #f39c12; color: #000; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #1a1a2e; border: 1px solid #2a3f5f; border-radius: 14px; padding: 24px; width: 100%; max-width: 400px; }
+        .modal h3 { color: #00d4ff; margin-bottom: 14px; font-size: 18px; }
+        .modal input, .modal textarea { width: 100%; padding: 12px; background: #0f1a2e; border: 1px solid #2a3f5f; border-radius: 8px; color: #eee; font-size: 15px; margin-bottom: 12px; font-family: inherit; }
+        .modal textarea { height: 80px; resize: vertical; }
+        .modal input:focus, .modal textarea:focus { outline: none; border-color: #00d4ff; }
+        .modal .modal-btns { display: flex; gap: 10px; }
+        .modal .modal-btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { background: #2a3f5f; color: #aaa; }
+        .btn-confirm { background: #4ecdc4; color: #000; }
+        .empty-state { text-align: center; padding: 50px 20px; color: #556677; }
+        .empty-state .empty-icon { font-size: 44px; margin-bottom: 12px; }
+        .empty-state p { font-size: 15px; }
+        .new-ticket-toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #ffd93d; color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; z-index: 300; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="dash-header">
+    <h1>📋 PVD2 Pack-Lev/Autofold</h1>
+    <span class="live-badge">● LIVE</span>
+</div>
+
+<div class="dash-tabs">
+    <div class="dash-tab tab-new active" onclick="switchTab('new')">New <span class="count" id="count-new">0</span></div>
+    <div class="dash-tab tab-reviewing" onclick="switchTab('reviewing')">Reviewing <span class="count" id="count-reviewing">0</span></div>
+    <div class="dash-tab tab-escalated" onclick="switchTab('escalated')">Escalated <span class="count" id="count-escalated">0</span></div>
+    <div class="dash-tab tab-closed" onclick="switchTab('closed')">Closed <span class="count" id="count-closed">0</span></div>
+</div>
+
+<div class="dash-content" id="dash-content"></div>
+
+<div class="new-ticket-toast" id="toast">🚨 New ticket submitted!</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <h3 id="modal-title"></h3>
+        <div id="modal-body"></div>
+    </div>
+</div>
+
+<script>
+var currentTab = 'new';
+var tickets = [];
+var lastCount = 0;
+
+// === FETCH TICKETS FROM SERVER ===
+function loadTickets() {
+    fetch('/api/tickets')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.tickets.length > lastCount && lastCount > 0) {
+                var toast = document.getElementById('toast');
+                toast.style.display = 'block';
+                setTimeout(function() { toast.style.display = 'none'; }, 3000);
+            }
+            lastCount = data.tickets.length;
+            tickets = data.tickets;
+            render();
+        })
+        .catch(function(err) {});
+}
+
+// === TAB SWITCHING ===
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.dash-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelector('.dash-tab.tab-' + tab).classList.add('active');
+    render();
+}
+
+// === TIME HELPERS ===
+function getTimeAgo(isoStr) {
+    var mins = Math.floor((Date.now() - new Date(isoStr).getTime()) / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins === 1) return '1 min ago';
+    if (mins < 60) return mins + ' min ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs === 1) return '1h ago';
+    return hrs + 'h ago';
+}
+
+function getTimerClass(isoStr) {
+    var mins = (Date.now() - new Date(isoStr).getTime()) / 60000;
+    if (mins >= 10) return 'timer-critical';
+    if (mins >= 5) return 'timer-danger';
+    if (mins >= 2) return 'timer-warn';
+    return '';
+}
+
+// === RENDER ===
+function render() {
+    var filtered = tickets.filter(function(t) { return t.status === currentTab; });
+
+    document.getElementById('count-new').textContent = tickets.filter(function(t) { return t.status === 'new'; }).length;
+    document.getElementById('count-reviewing').textContent = tickets.filter(function(t) { return t.status === 'reviewing'; }).length;
+    document.getElementById('count-escalated').textContent = tickets.filter(function(t) { return t.status === 'escalated'; }).length;
+    document.getElementById('count-closed').textContent = tickets.filter(function(t) { return t.status === 'closed'; }).length;
+
+    var container = document.getElementById('dash-content');
+
+    if (filtered.length === 0) {
+        var msgs = { new: 'No new tickets 🎉', reviewing: 'Nothing being reviewed', escalated: 'No escalated issues', closed: 'No closed tickets yet' };
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">✨</div><p>' + msgs[currentTab] + '</p></div>';
+        return;
+    }
+
+    var html = '';
+    for (var i = 0; i < filtered.length; i++) {
+        var t = filtered[i];
+        var timerClass = (t.status === 'new' || t.status === 'escalated') ? getTimerClass(t.createdAt) : '';
+        var flagClass = t.flagged ? 'flagged' : '';
+
+        html += '<div class="ticket-card ' + flagClass + '">';
+        html += '<div class="ticket-top"><span class="ticket-station">' + t.station + '</span><span class="ticket-time ' + timerClass + '">' + getTimeAgo(t.createdAt) + '</span></div>';
+        html += '<div class="ticket-issue">' + t.issue + '</div>';
+
+        if (t.claimedBy && t.status !== 'new') {
+            html += '<div class="claimed-by">👤 Claimed by ' + t.claimedBy + '</div>';
+        }
+        if (t.status === 'escalated') {
+            html += '<div class="escalate-label">⚠️ Needs RME to fix</div>';
+        }
+        if (t.status === 'closed' && t.flagged) {
+            html += '<span class="flag-badge">🚩 Needs More Work</span>';
+        }
+        if (t.status === 'closed' && t.notes) {
+            html += '<div class="resolution-notes">📝 ' + t.notes + '</div>';
+        }
+        if (t.status === 'closed' && t.closedAt) {
+            html += '<div class="ticket-meta">Closed ' + getTimeAgo(t.closedAt) + '</div>';
+        }
+
+        html += '<div class="ticket-actions">';
+        if (t.status === 'new') {
+            html += '<button class="btn-claim" onclick="claimTicket(\'' + t.id + '\')">✋ Claim</button>';
+        } else if (t.status === 'reviewing') {
+            html += '<button class="btn-resolve" onclick="resolveTicket(\'' + t.id + '\')">✅ Resolved</button>';
+            html += '<button class="btn-escalate" onclick="escalateTicket(\'' + t.id + '\')">🚨 Escalate</button>';
+        } else if (t.status === 'escalated') {
+            html += '<button class="btn-resolve" onclick="resolveTicket(\'' + t.id + '\')">✅ Resolved</button>';
+            html += '<button class="btn-needswork" onclick="needsWorkTicket(\'' + t.id + '\')">🚩 Needs More Work</button>';
+        }
+        html += '</div>';
+        html += '<div class="ticket-meta">' + t.id + '</div>';
+        html += '</div>';
+    }
+
+    container.innerHTML = html;
+}
+
+// === ACTIONS ===
+function claimTicket(id) {
+    showModal('✋ Claim Ticket',
+        '<p style="color:#aaa; margin-bottom:12px;">Enter your username:</p>' +
+        '<input type="text" id="input-username" placeholder="e.g. jwhitt">' +
+        '<div class="modal-btns">' +
+        '<button class="btn-cancel" onclick="hideModal()">Cancel</button>' +
+        '<button class="btn-confirm" onclick="doClaim(\'' + id + '\')">Claim</button>' +
+        '</div>'
+    );
+    setTimeout(function() { var el = document.getElementById('input-username'); if (el) el.focus(); }, 100);
+}
+
+function doClaim(id) {
+    var username = document.getElementById('input-username').value.trim();
+    if (!username) return;
+    fetch('/api/tickets/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'claim', username: username })
+    }).then(function() { hideModal(); loadTickets(); });
+}
+
+function escalateTicket(id) {
+    fetch('/api/tickets/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'escalate' })
+    }).then(function() { loadTickets(); });
+}
+
+function resolveTicket(id) {
+    showModal('✅ Resolve Ticket',
+        '<p style="color:#aaa; margin-bottom:12px;">Resolution notes:</p>' +
+        '<textarea id="input-notes" placeholder="What fixed it?"></textarea>' +
+        '<div class="modal-btns">' +
+        '<button class="btn-cancel" onclick="hideModal()">Cancel</button>' +
+        '<button class="btn-confirm" style="background:#27ae60;color:#fff;" onclick="doResolve(\'' + id + '\')">Close Ticket</button>' +
+        '</div>'
+    );
+}
+
+function doResolve(id) {
+    var notes = document.getElementById('input-notes').value.trim();
+    fetch('/api/tickets/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resolve', notes: notes || 'Resolved' })
+    }).then(function() { hideModal(); loadTickets(); });
+}
+
+function needsWorkTicket(id) {
+    showModal('🚩 Needs More Work',
+        '<p style="color:#aaa; margin-bottom:12px;">What still needs to happen?</p>' +
+        '<textarea id="input-notes" placeholder="e.g. RME says needs parts, next PM window"></textarea>' +
+        '<div class="modal-btns">' +
+        '<button class="btn-cancel" onclick="hideModal()">Cancel</button>' +
+        '<button class="btn-confirm" style="background:#f39c12;color:#000;" onclick="doNeedsWork(\'' + id + '\')">Close & Flag</button>' +
+        '</div>'
+    );
+}
+
+function doNeedsWork(id) {
+    var notes = document.getElementById('input-notes').value.trim();
+    fetch('/api/tickets/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'needs-work', notes: notes || 'Needs more work' })
+    }).then(function() { hideModal(); loadTickets(); });
+}
+
+// === MODAL ===
+function showModal(title, bodyHtml) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-body').innerHTML = bodyHtml;
+    document.getElementById('modal').classList.add('show');
+}
+function hideModal() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === document.getElementById('modal')) hideModal();
+});
+
+// === POLL EVERY 3 SECONDS ===
+loadTickets();
+setInterval(loadTickets, 3000);
+</script>
+</body>
+</html>
+```
