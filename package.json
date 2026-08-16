@@ -1,0 +1,14 @@
+```json
+{
+  "name": "pvd2-station-tickets",
+  "version": "1.0.0",
+  "description": "PVD2 Pack-Lev/Autofold Station Ticket System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+```
