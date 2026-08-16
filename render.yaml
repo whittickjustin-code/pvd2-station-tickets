@@ -1,0 +1,9 @@
+```yaml
+services:
+  - type: web
+    name: pvd2-station-tickets
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+```
